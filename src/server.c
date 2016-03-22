@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 
 #define SIZE 0
 #define TYPE 1
@@ -48,7 +49,7 @@ void read_conf() {
             fgets (indx, 512, conf_file);
             strtok(indx, "\n");
         }
-    } 
+    }
     fclose (conf_file);
 }
 
@@ -126,7 +127,7 @@ char** get_file_attr(int fd, char* file) {
 int send_headers(int sock, char** attr) {
     char headers[80];
     sprintf(headers, "HTTP/1.1 200 OK\nContent-length: %s\nContent-Type: %s\n\n", attr[SIZE], attr[TYPE]);
-    
+
     if(send(sock, headers, strlen(headers), 0) < 0) {
         perror("Couldn't send headers because: ");
         exit(8);
@@ -149,7 +150,7 @@ void handle_connection(int sock) {
 
     file=get_request_file(req);
     printf("Computed File: %s\n",file);
-    
+
     if((fd=open(file, O_RDONLY)) < 0) {
         perror("Couldn't open file because: ");
         exit(6);
@@ -162,7 +163,7 @@ void handle_connection(int sock) {
     if((bsent=sendfile(sock, fd, NULL, atoi(attr[SIZE]))) < 0) {
         perror("Didn't send file because: ");
         exit(7);
-    }     
+    }
     printf("Bytes sent: %i\n", (int)bsent);
 
     // free(file);
