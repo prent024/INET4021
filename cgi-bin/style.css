@@ -1,0 +1,13 @@
+h2{
+    margin-top: 28px;
+    margin-left: 0px;
+    font-weight: bold;
+    text-align: center;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 35px;
+}
+
+div#il *{
+    display: inline;
+    text-align: center;
+}
