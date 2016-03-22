@@ -23,6 +23,7 @@ HTML_TEMPLATE="""
   <body>
     <h1 align="center">Welcome To Our Webpage</h1>
     <p align="center">Wanna Have Some Math "Fun"?</p>
+    <p align="center">Add Two Numbers!</p>
     <div align="center">
       <img src="pic_mountain.jpg" alt="Mountain View" height="200" width="300">
     </img><br/><br/>
@@ -33,7 +34,7 @@ HTML_TEMPLATE="""
     </body>
     <script type="text/javascript">
     function goBack() {
-      window.history.back();
+      window.history.href="../index.html";
     }
     </script>
   </html>
