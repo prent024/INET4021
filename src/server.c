@@ -139,6 +139,7 @@ void handle_connection(int sock) {
     ssize_t ssize, bsent;
     char req[512];
     char* file;
+    char* ext;
     int fd;
     char** attr;
 
@@ -150,6 +151,13 @@ void handle_connection(int sock) {
 
     file=get_request_file(req);
     printf("Computed File: %s\n",file);
+
+    ext=strrchr(file, '.');
+    if(strcmp(ext, ".cgi") == 0) {
+        attr[0] = "";
+        execvp(file, attr);
+        return;
+    }
 
     if((fd=open(file, O_RDONLY)) < 0) {
         perror("Couldn't open file because: ");
