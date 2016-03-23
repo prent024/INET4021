@@ -10,7 +10,7 @@ x500: lixx2264
 This is our Lab 1 submission.
 (Need to set the permission to 755 to execute the file)
 
-1. We use C socket to build up the server, with the ability to read the conf file and output access/error record in the log files.
+1. We use C socket to build up the server, with the ability to read the conf file and output error record in the log files. (access log is not working properly)
 2. We use python cgi module to create the compute.cgi file that computes the sum of two int send from index.html form
 3. The index.html will create a single form with two form field, and it will return the two integers entered in the form field
 4. The server will pass the two returned parameters (num1 and num2) to the compute.cgi file, and the cgi file will parse the two int and compute the sum of the two integers then produce the sum
