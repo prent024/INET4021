@@ -13,8 +13,10 @@
 #define TYPE 1
 
 // Global variables set in get_conf().
-char root[1024], port_buf[10], cons_buf[10], indx[512];
+char root[1024], port_buf[10], cons_buf[10], indx[512], access_log[1024], error_log[1024];
 int port=8888, cons=3;      //Gave these default values in case config file is removed
+FILE *errorf, *accessf;
+
 
 // Read in the config file
 void read_conf() {
@@ -50,6 +52,10 @@ void read_conf() {
             strtok(indx, "\n");
         }
     }
+    strncpy(access_log, root, 1023);
+    strncpy(error_log,  root, 1023);
+    strcat(access_log, "/logs/access.log");
+    strcat(error_log,  "/logs/error.log");
     fclose (conf_file);
 }
 
@@ -67,17 +73,27 @@ int create_and_bind() {
     sin.sin_port=htons(port);           // use the port specified by config file
 
     if((s=socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("Could not create socket because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Could not create socket because: ");
+        } else {
+            fprintf(errorf, "Could not create socket.\n");
+            fclose(errorf);
+        }
         exit(2);
     }
 
     yes = 1;
-    if ( setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
+    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
         perror("setsockopt error: ");
     }
 
     if((b=bind(s, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
-        perror("Could not bind to socket because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Could not bind to socket because: ");
+        } else {
+            fprintf(errorf, "Could not bind to socket.\n");
+            fclose(errorf);
+        }
         exit(3);
     }
     return s;
@@ -113,7 +129,12 @@ char** get_file_attr(int fd, char* file) {
     char* ext;
 
     if(fstat(fd, &st) == -1) {
-        perror("Couldn't get file size because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Couldn't get file size because: ");
+        } else {
+            fprintf(errorf, "Couldn't get file size.\n");
+            fclose(errorf);
+        }
         exit(7);
     }
     sprintf(size, "%jd", st.st_size);
@@ -136,7 +157,12 @@ int send_headers(int sock, char** attr) {
     sprintf(headers, "HTTP/1.1 200 OK\nContent-length: %s\nContent-Type: %s\n\n", attr[SIZE], attr[TYPE]);
 
     if(send(sock, headers, strlen(headers), 0) < 0) {
-        perror("Couldn't send headers because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Couldn't send headers because: ");
+        } else {
+            fprintf(errorf, "Couldn't send headers.\n");
+            fclose(errorf);
+        }
         exit(8);
     }
 }
@@ -151,7 +177,12 @@ void handle_connection(int sock) {
     int fd, chars;
 
     if((ssize=recv(sock, &req, sizeof(req), 0)) < 0) {
-        perror("Did not receive anything because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Did not receive anything because: ");
+        } else {
+            fprintf(errorf, "Did not receive anything.\n");
+            fclose(errorf);
+        }
         exit(5);
     }
     printf("Got \"%s\" from socket\n", req);
@@ -167,30 +198,38 @@ void handle_connection(int sock) {
         if(trash != NULL) {
             trash[0]='\0';
         } else {
-            perror("Data wasn't passed with the GET request: ");
+            if((errorf=fopen(error_log, "a")) == NULL) {
+                perror("Data wasn't passed with the GET request: ");
+            } else {
+                fprintf(errorf, "Data wasn't passed with the GET request.\n");
+                fclose(errorf);
+            }
             exit(8);
         }
-        printf("CGI_FILE: %s\n", cgi_file);
         argv[0]=cgi_file;
-        printf("printing argv?\n");
-        printf("argv[0]: %s\n", argv[0]);
         argv[1]=file;
-        printf("argv[1]: %s\n", argv[1]);
         sprintf(sock_str, "%i", sock);
         argv[2]=sock_str;
-        printf("argv[2]: %s\n", argv[2]);
-        printf("Bout to exec things\n");
         argv[3]=NULL;
          if(execvp(argv[0], argv) < 0) {
-            perror("Exec failed: ");
+            if((errorf=fopen(error_log, "a")) == NULL) {
+                perror("Exec failed: ");
+            } else {
+                fprintf(errorf, "Exec failed.\n");
+                fclose(errorf);
+            }
             exit(9);
         } else {
-            printf("Apparently execvp ran...\n");
         }
     }
 
     if((fd=open(file, O_RDONLY)) < 0) {
-        perror("Couldn't open file because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Couldn't open file because: ");
+        } else {
+            fprintf(errorf, "Couldn't open file.\n");
+            fclose(errorf);
+        }
         exit(6);
     }
     attr=get_file_attr(fd,file);
@@ -199,7 +238,12 @@ void handle_connection(int sock) {
 
     send_headers(sock, attr);
     if((bsent=sendfile(sock, fd, NULL, atoi(attr[SIZE]))) < 0) {
-        perror("Didn't send file because: ");
+        if((errorf=fopen(error_log, "a")) == NULL) {
+            perror("Couldn't send file because: ");
+        } else {
+            fprintf(errorf, "Couldn't send file.\n");
+            fclose(errorf);
+        }
         exit(7);
     }
     printf("Bytes sent: %i\n", (int)bsent);
@@ -222,10 +266,14 @@ void listen_and_accept(int s) {
 
     while(1) {
         if((new_sock=accept(s, (struct sockaddr *)&address, &addrlen)) < 0) {
-            perror("Accepting connection");
+            if((errorf=fopen(error_log, "a")) == NULL) {
+                perror("Couldn't accept connection: ");
+            } else {
+                fprintf(errorf, "Couldn't accept connection.\n");
+                fclose(errorf);
+            }
             exit(4);
         }
-        fprintf(stderr, "\ngot a connection\n");
 
         if(!fork()) {
             close(s);
