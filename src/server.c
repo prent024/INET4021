@@ -55,7 +55,7 @@ void read_conf() {
 
 // Creates and binds the server socket
 int create_and_bind() {
-    int s, b;
+    int s, b, yes;
     struct sockaddr_in sin;
     struct hostent *server;
     char conn_addr[INET6_ADDRSTRLEN];
@@ -71,6 +71,11 @@ int create_and_bind() {
         exit(2);
     }
 
+    yes = 1;
+    if ( setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1 ) {
+        perror("setsockopt error: ");
+    }
+
     if((b=bind(s, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
         perror("Could not bind to socket because: ");
         exit(3);
@@ -80,6 +85,7 @@ int create_and_bind() {
 
 char* get_request_file(char* req) {
     char* path=(char*)malloc(1024*sizeof(char));
+    char* trash;
     const char s[]=" ";
     char *token;
 
@@ -94,6 +100,7 @@ char* get_request_file(char* req) {
     } else {
         strncat(path, token, 1023);
     }
+
     printf("PATH: %s\n", path);
     return path;
 }
@@ -137,11 +144,11 @@ int send_headers(int sock, char** attr) {
 // Actions a child process runs for a particular connection
 void handle_connection(int sock) {
     ssize_t ssize, bsent;
-    char req[512];
+    char req[512], cgi_file[512], sock_str[50];
+    char **attr, **argv;
     char* file;
-    char* ext;
-    int fd;
-    char** attr;
+    char *ext, *trash; 
+    int fd, chars;
 
     if((ssize=recv(sock, &req, sizeof(req), 0)) < 0) {
         perror("Did not receive anything because: ");
@@ -153,10 +160,29 @@ void handle_connection(int sock) {
     printf("Computed File: %s\n",file);
 
     ext=strrchr(file, '.');
-    if(strcmp(ext, ".cgi") == 0) {
-        attr[0] = "";
-        execvp(file, attr);
-        return;
+    if(strstr(ext, ".cgi")) {
+        strncpy(cgi_file, file, 512);
+        trash=strrchr(cgi_file, '?');
+        printf("TRASH: %s\n", trash);
+        if(trash != NULL) {
+            trash[0]='\0';
+        } else {
+            perror("Data wasn't passed with the GET request: ");
+            exit(8);
+        }
+        printf("CGI_FILE: %s\n", cgi_file);
+        argv[0]=cgi_file;
+        printf("argv[0]: %s\n", argv[0]);
+        argv[1]=file;
+        printf("argv[1]: %s\n", argv[1]);
+        // sprintf(sock_str, "%i", sock);
+        // printf("SOCKET: %s\n", sock_str);
+        // argv[2]=sock_str;
+        printf("arg/v[2]: %s\n", argv[2]);
+        if(execvp(*argv, argv) < 0) {
+            perror("Exec failed: ");
+            exit(9);
+        }
     }
 
     if((fd=open(file, O_RDONLY)) < 0) {

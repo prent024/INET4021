@@ -11,13 +11,21 @@
   }
   </style>
 </head>
-<body onload="preloadImages()">
+<body>
   <h1 align="center">Welcome To Our Webpage</h1>
-  <p align="center">Wanna Upload Your Own Pictures?</p>
+  <p align="center">Wanna Have Some Math "Fun"?</p>
+  <p align="center">Add Two Numbers!</p>
   <div align="center">
     <img src="images/pic_mountain.jpg" alt="Mountain View">
   </img><br/><br/>
-    <a href="cgi-bin/gallery.cgi">Upload Your Own Pictures In the Gallery!</a>
+  <form action="cgi-bin/compute.cgi" name="compute" id="compute" method = "GET" enctype="multipart/form-data">
+  First Number: <input name="num1" id="num1" type="number"></input>
+  <br/>
+  <br/>
+  Second Number: <input name="num2" id="num2" type="number"></input><br/>
+  <br/>
+  <input type="submit" value="Submit"></input>
+  </form>
   </div>
   </body>
 </html>
