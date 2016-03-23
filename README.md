@@ -6,5 +6,4 @@
 ## TO DO:
 ### The python cgi script cannot send the HTML script to the existing socket (to the web browser), need to fix this problem
 ### Need to add conf file and log file
-### Need to create a README text file (no .doc or .docx) describing code and what works/ not working
 ### Zip all diectory into one zip file and turn it in
