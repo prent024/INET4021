@@ -145,7 +145,7 @@ int send_headers(int sock, char** attr) {
 void handle_connection(int sock) {
     ssize_t ssize, bsent;
     char req[512], cgi_file[512], sock_str[50];
-    char **attr, **argv;
+    char **attr, *argv[4];
     char* file;
     char *ext, *trash; 
     int fd, chars;
@@ -172,16 +172,20 @@ void handle_connection(int sock) {
         }
         printf("CGI_FILE: %s\n", cgi_file);
         argv[0]=cgi_file;
+        printf("printing argv?\n");
         printf("argv[0]: %s\n", argv[0]);
         argv[1]=file;
         printf("argv[1]: %s\n", argv[1]);
-        // sprintf(sock_str, "%i", sock);
-        // printf("SOCKET: %s\n", sock_str);
-        // argv[2]=sock_str;
-        printf("arg/v[2]: %s\n", argv[2]);
-        if(execvp(*argv, argv) < 0) {
+        sprintf(sock_str, "%i", sock);
+        argv[2]=sock_str;
+        printf("argv[2]: %s\n", argv[2]);
+        printf("Bout to exec things\n");
+        argv[3]=NULL;
+         if(execvp(argv[0], argv) < 0) {
             perror("Exec failed: ");
             exit(9);
+        } else {
+            printf("Apparently execvp ran...\n");
         }
     }
 

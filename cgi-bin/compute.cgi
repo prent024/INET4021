@@ -13,6 +13,7 @@ num1 = sys.argv[1][i:j]
 num2 = sys.argv[1][sys.argv[1].index("num2=")+5:]
 print "num1: "+num1
 print "num2: "+num2
+# print "socket: "+sys.argv[2]
 
 print "Content-Type:text/html\n\n"
 
@@ -57,7 +58,6 @@ def compute(num1, num2, sock):
   # num1 = int(form.getvalue("num1"))
   # num2 = int(form.getvalue("num2"))
   total = num1 + num2
-  fd = os.open(sock, os.O_WRONLY)
-  fd.write(HTML_TEMPLATE%{'MESSAGE': total})
+  print HTML_TEMPLATE%{'MESSAGE': total}
 
 compute(int(num1), int(num2), int(sys.argv[2]))
