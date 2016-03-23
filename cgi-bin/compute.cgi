@@ -1,8 +1,18 @@
 #!/usr/bin/python
 import cgi
 import cgitb
+import sys
+import os
 cgitb.enable()
 
+print sys.argv
+
+i = sys.argv[1].index("num1=")+5
+j = sys.argv[1].index("&")
+num1 = sys.argv[1][i:j]
+num2 = sys.argv[1][sys.argv[1].index("num2=")+5:]
+print "num1: "+num1
+print "num2: "+num2
 
 print "Content-Type:text/html\n\n"
 
@@ -14,9 +24,9 @@ HTML_TEMPLATE="""
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <style type="text/css">
     .text {
-    	font-family: Arial, Helvetica, sans-serif;
-    	font-size: 11px;
-    	color: #FFFFFF;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #FFFFFF;
     }
     </style>
   </head>
@@ -40,13 +50,14 @@ HTML_TEMPLATE="""
   </html>
 """
 
-def compute(num1, num2):
-  form = cgi.FieldStorage()
-  if not form.has_key(num1) and not form.has_key(num2):
-      return
-  num1 = int(form.getvalue("num1"))
-  num2 = int(form.getvalue("num2"))
+def compute(num1, num2, sock):
+  # form = cgi.FieldStorage()
+  # if not form.has_key(num1) and not form.has_key(num2):
+  #     return
+  # num1 = int(form.getvalue("num1"))
+  # num2 = int(form.getvalue("num2"))
   total = num1 + num2
-  print HTML_TEMPLATE%{'MESSAGE': total}
+  fd = os.open(sock, os.O_WRONLY)
+  fd.write(HTML_TEMPLATE%{'MESSAGE': total})
 
-compute("num1", "num2")
+compute(int(num1), int(num2), int(sys.argv[2]))
